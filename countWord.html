@@ -5,12 +5,58 @@
 
 <x-markdown>
 
-```
-console.log(11)
+```javascript
+const fs = require('fs')
+
+let completeTasks = 0 //统计完整的异步函数计数器
+
+let tasks = [] //要执行的异步函数
+
+let wordCounts = {} //存储每一个异步函数的读取结果
+
+let fileDir = './text' //目标目录
+
+//检查是否所有并行异步函数执行完成
+function checkIfComplete(){
+    completeTasks++
+    if(completeTasks == tasks.length){//表示所有的异步函数都并行执行完了
+        for(var index in wordCounts){ //循环打印出结果
+            console.log(`${index} : ${wordCounts[index]}`)
+        }
+    }
+}
+
+function countWordsInText(text){
+    let words = text.toString().toLowerCase().split(/\W+/).sort()
+    for(var index in words){
+        var word = words[index]
+        if(word){
+            wordCounts[word] = (wordCounts[word]) ? wordCounts[word] + 1 : 1
+        }
+    }
+}
+
+//获取目录下的文件
+fs.readdir(fileDir,function(err,files){
+    if(err) throw err
+    for(var index in files){
+        var task = (function(file){
+            return function(){
+                fs.readFile(file,(err,data)=>{
+                    countWordsInText(data)
+                    checkIfComplete() //判断是否检查完毕
+                })
+            }
+        })(`${fileDir}/${files[index]}`)
+        tasks.push(task)
+    }
+    for( var items in tasks ){
+        tasks[items]()
+    }
+    
+})
 ```  
-`
-console.log(2)  
-`
+
   
 
 
